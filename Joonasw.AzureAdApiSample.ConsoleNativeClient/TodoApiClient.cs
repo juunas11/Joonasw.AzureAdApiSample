@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -12,16 +11,17 @@ namespace Joonasw.AzureAdApiSample.ConsoleNativeClient
 {
     public class TodoApiClient
     {
-        private static readonly string Authority = ConfigurationManager.AppSettings["AzureAd:Authority"];
-        private static readonly string ApiResourceUri = ConfigurationManager.AppSettings["AzureAd:ApiResourceUri"];
-        private static readonly string ClientId = ConfigurationManager.AppSettings["AzureAd:ClientId"];
-        private static readonly Uri RedirectUri = new Uri(ConfigurationManager.AppSettings["AzureAd:RedirectUri"]);
-        private static readonly string ApiBaseUrl = ConfigurationManager.AppSettings["AzureAd:ApiBaseUrl"];
         private static readonly HttpClient Client = new HttpClient();
+        private readonly ClientSettings _settings;
+
+        public TodoApiClient(ClientSettings settings)
+        {
+            _settings = settings;
+        }
 
         public async Task ListTodosAsync()
         {
-            using (var req = new HttpRequestMessage(HttpMethod.Get, $"{ApiBaseUrl}/api/todos"))
+            using (var req = new HttpRequestMessage(HttpMethod.Get, $"{_settings.ApiBaseUrl}/api/todos"))
             {
                 string accessToken = await GetAccessTokenAsync();
                 req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -48,7 +48,7 @@ namespace Joonasw.AzureAdApiSample.ConsoleNativeClient
         public async Task<Guid> CreateTodoAsync(TodoItem todoItem)
         {
             Console.WriteLine("---Create todo item---");
-            using (var req = new HttpRequestMessage(HttpMethod.Post, $"{ApiBaseUrl}/api/todos"))
+            using (var req = new HttpRequestMessage(HttpMethod.Post, $"{_settings.ApiBaseUrl}/api/todos"))
             {
                 string accessToken = await GetAccessTokenAsync();
                 req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -71,7 +71,7 @@ namespace Joonasw.AzureAdApiSample.ConsoleNativeClient
         public async Task DeleteTodoAsync(Guid id)
         {
             Console.WriteLine("---Delete todo item---");
-            using (var req = new HttpRequestMessage(HttpMethod.Delete, $"{ApiBaseUrl}/api/todos/{id}"))
+            using (var req = new HttpRequestMessage(HttpMethod.Delete, $"{_settings.ApiBaseUrl}/api/todos/{id}"))
             {
                 string accessToken = await GetAccessTokenAsync();
                 req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -86,13 +86,20 @@ namespace Joonasw.AzureAdApiSample.ConsoleNativeClient
 
         private async Task<string> GetAccessTokenAsync()
         {
-            var context = new AuthenticationContext(Authority);
+            var context = new AuthenticationContext(_settings.Authority);
 
-            var result = await context.AcquireTokenAsync(
-                ApiResourceUri,
-                ClientId,
-                RedirectUri,
-                new PlatformParameters(PromptBehavior.Auto));
+            AuthenticationResult result;
+            try
+            {
+                result = await context.AcquireTokenSilentAsync(_settings.ApiResourceUri, _settings.ClientId);
+            }
+            catch (AdalSilentTokenAcquisitionException)
+            {
+                DeviceCodeResult deviceCodeResult = await context.AcquireDeviceCodeAsync(_settings.ApiResourceUri, _settings.ClientId);
+                Console.WriteLine(deviceCodeResult.Message);
+                result = await context.AcquireTokenByDeviceCodeAsync(deviceCodeResult);
+            }
+
             return result.AccessToken;
         }
     }

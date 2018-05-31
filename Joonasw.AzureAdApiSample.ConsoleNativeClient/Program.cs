@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace Joonasw.AzureAdApiSample.ConsoleNativeClient
 {
@@ -7,7 +8,9 @@ namespace Joonasw.AzureAdApiSample.ConsoleNativeClient
     {
         static async Task Main(string[] args)
         {
-            var todoApiClient = new TodoApiClient();
+            var config = CreateConfig();
+            var settings = config.Get<ClientSettings>();
+            var todoApiClient = new TodoApiClient(settings);
             await todoApiClient.ListTodosAsync();
             Guid id = await todoApiClient.CreateTodoAsync(new TodoItem
             {
@@ -19,5 +22,11 @@ namespace Joonasw.AzureAdApiSample.ConsoleNativeClient
             await todoApiClient.ListTodosAsync();
             Console.ReadLine();
         }
+
+        private static IConfiguration CreateConfig() =>
+            new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .AddUserSecrets<Program>()
+                .Build();
     }
 }
