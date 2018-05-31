@@ -6,37 +6,33 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Joonasw.AzureAdApiSample.Api.Controllers
 {
+    [ApiController]
     [Route("api/[controller]")]
-    public class TodosController : Controller
+    public class TodosController : ControllerBase
     {
         // In-memory data-store for testing.
-        private readonly List<TodoItem> _todoItems;
-
-        public TodosController()
+        private static readonly List<TodoItem> TodoItems = new List<TodoItem>
         {
-            _todoItems = new List<TodoItem>
+            new TodoItem
             {
-                new TodoItem
-                {
-                    Id = Guid.NewGuid(),
-                    Text = "Implement authentication",
-                    IsDone = true
-                }
-            };
-        }
+                Id = Guid.NewGuid(),
+                Text = "Implement authentication",
+                IsDone = true
+            }
+        };
 
         // GET api/todos
         [HttpGet]
         public IActionResult Get()
         {
-            return Ok(_todoItems);
+            return Ok(TodoItems);
         }
 
         // GET api/todos/guid-value
         [HttpGet("{id}")]
         public IActionResult Get(Guid id)
         {
-            var item = _todoItems.FirstOrDefault(i => i.Id == id);
+            TodoItem item = TodoItems.FirstOrDefault(i => i.Id == id);
             if(item == null)
             {
                 return NotFound();
@@ -51,7 +47,7 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
         {
             model.Id = Guid.NewGuid();
 
-            _todoItems.Add(model);
+            TodoItems.Add(model);
             return CreatedAtAction(nameof(Get), new{id = model.Id}, model);
         }
 
@@ -61,14 +57,14 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
         {
             model.Id = id;
 
-            var item = _todoItems.FirstOrDefault(i => i.Id == id);
+            TodoItem item = TodoItems.FirstOrDefault(i => i.Id == id);
             if(item == null)
             {
                 return NotFound();
             }
 
-            _todoItems.Remove(item);
-            _todoItems.Add(model);
+            TodoItems.Remove(item);
+            TodoItems.Add(model);
 
             return NoContent();
         }
@@ -77,10 +73,10 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
         [HttpDelete("{id}")]
         public void Delete(Guid id)
         {
-            var item = _todoItems.FirstOrDefault(i => i.Id == id);
+            TodoItem item = TodoItems.FirstOrDefault(i => i.Id == id);
             if(item != null)
             {
-                _todoItems.Remove(item);
+                TodoItems.Remove(item);
             }
         }
     }
