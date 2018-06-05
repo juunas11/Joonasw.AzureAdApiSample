@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Joonasw.AzureAdApiSample.Api
 {
@@ -32,7 +33,9 @@ namespace Joonasw.AzureAdApiSample.Api
             {
                 o.AddPolicy("default", policy =>
                 {
-                    policy.RequireClaim(Constants.ScopeClaimType, "user_impersonation");
+                    policy.RequirePermissions(
+                        delegated: new[] { "user_impersonation" },
+                        application: new[] { "Todo.Read.All" });
                 });
             });
 
@@ -44,7 +47,7 @@ namespace Joonasw.AzureAdApiSample.Api
                 .AddJwtBearer(o =>
                 {
                     o.Authority = Configuration["Authentication:Authority"];
-                    o.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                    o.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidAudiences = new List<string>
                         {
@@ -54,6 +57,7 @@ namespace Joonasw.AzureAdApiSample.Api
                     };
                 });
             services.AddSingleton<IClaimsTransformation, AzureAdScopeClaimTransformation>();
+            services.AddSingleton<IAuthorizationHandler, PermissionRequirementHandler>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
@@ -11,6 +10,9 @@ namespace Joonasw.AzureAdApiSample.ConsoleBackgroundJob
         {
             IConfiguration config = CreateConfig();
             JobSettings settings = config.Get<JobSettings>();
+
+            var apiClient = new TodoApiClient(settings);
+            await apiClient.ListTodosAsync();
         }
 
         private static IConfiguration CreateConfig() =>
