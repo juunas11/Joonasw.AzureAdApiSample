@@ -24,18 +24,34 @@ namespace Joonasw.AzureAdApiSample.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc(o =>
-            {
-                o.Filters.Add(new AuthorizeFilter("default"));
-            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services
+                .AddMvc(o =>
+                {
+                    // Requires authentication across the API
+                    o.Filters.Add(new AuthorizeFilter(Policies.Default));
+                })
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddAuthorization(o =>
             {
-                o.AddPolicy("default", policy =>
+                o.AddPolicy(Policies.Default, policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    //policy.RequirePermissions(
+                    //    delegated: new[] { "user_impersonation" },
+                    //    application: new[] { "Todo.Read.All" });
+                });
+                o.AddPolicy(Policies.ReadTodoItems, policy =>
                 {
                     policy.RequirePermissions(
-                        delegated: new[] { "user_impersonation" },
-                        application: new[] { "Todo.Read.All" });
+                        delegated: new[] { Scopes.TodosRead, Scopes.TodosReadWrite }, // One of these scopes required for delegated calls
+                        application: new[] { AppRoles.TodosRead, AppRoles.TodosReadWrite }); // One of these roles required for application-only calls
+                });
+                o.AddPolicy(Policies.WriteTodoItems, policy =>
+                {
+                    policy.RequirePermissions(
+                        delegated: new[] { Scopes.TodosReadWrite },
+                        application: new[] { AppRoles.TodosReadWrite });
                 });
             });
 

@@ -51,7 +51,7 @@ namespace Joonasw.AzureAdApiSample.ConsoleBackgroundJob
             Console.WriteLine($"---Todos list--- ({todos.Count} items)");
             foreach (TodoItem todo in todos)
             {
-                Console.WriteLine($"{todo.Text}: {(todo.IsDone ? "Done" : "Not done")} ({todo.Id})");
+                Console.WriteLine($"\"{todo.Text}\": {(todo.IsDone ? "Done" : "Not done")}, user {todo.UserId} (Id {todo.Id})");
             }
         }
     }

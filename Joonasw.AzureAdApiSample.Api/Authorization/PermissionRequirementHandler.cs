@@ -15,6 +15,18 @@ namespace Joonasw.AzureAdApiSample.Api.Authorization
                 context.User.HasClaim(Constants.ScopeClaimType, p)))
             {
                 // TODO: You may also need to check calling user roles
+                // for example:
+                //
+                // if (requirement.UserRoles.Any(r => context.User.HasClaim(ClaimTypes.Role, r)))
+                // {
+                //     context.Succeed(requirement);
+                // }
+                // and of course you would remove the below call to Succeed()
+
+                // Since in this API we always return a user's todo items (for delegated calls),
+                // there are no roles and we don't need to check.
+                // But if there was a role that allows accessing an administrative endpoint,
+                // then you need role checks here.
 
                 //Caller has one of the allowed delegated permissions
                 context.Succeed(requirement);
