@@ -83,6 +83,7 @@ namespace Joonasw.AzureAdApiSample.Api
                 app.UseDeveloperExceptionPage();
             }
 
+            // Very important that this is before MVC (or anything that will require authentication)
             app.UseAuthentication();
 
             app.UseMvc();
