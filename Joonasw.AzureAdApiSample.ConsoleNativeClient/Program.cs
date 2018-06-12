@@ -20,6 +20,7 @@ namespace Joonasw.AzureAdApiSample.ConsoleNativeClient
             await todoApiClient.ListTodosAsync();
             await todoApiClient.DeleteTodoAsync(id);
             await todoApiClient.ListTodosAsync();
+            Console.WriteLine("Press Enter to quit");
             Console.ReadLine();
         }
 

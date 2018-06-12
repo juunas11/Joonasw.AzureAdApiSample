@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Joonasw.AzureAdApiSample.Api.Data
+namespace Joonasw.AzureAdApiSample.ConsoleBackgroundJob
 {
     public class TodoItem
     {

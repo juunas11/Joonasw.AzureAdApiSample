@@ -7,6 +7,12 @@ using Microsoft.AspNetCore.Authentication;
 
 namespace Joonasw.AzureAdApiSample.Api.Authorization
 {
+    /// <summary>
+    /// Splits the scope claim assigned by Azure AD
+    /// by spaces so that you can check for a scope with
+    /// <code>User.HasClaim(Constants.ScopeClaimType, "scope")</code>,
+    /// instead of having to split by space every time.
+    /// </summary>
     public class AzureAdScopeClaimTransformation : IClaimsTransformation
     {
         public Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
