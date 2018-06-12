@@ -2,7 +2,6 @@
 using Joonasw.AzureAdApiSample.Api.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -43,6 +42,8 @@ namespace Joonasw.AzureAdApiSample.Api
                 })
                 .AddJwtBearer(o =>
                 {
+                    //In a multi-tenant app, make sure the authority is:
+                    //o.Authority = "https://login.microsoftonline.com/common";
                     o.Authority = Configuration["Authentication:Authority"];
                     o.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
                     {
@@ -50,7 +51,15 @@ namespace Joonasw.AzureAdApiSample.Api
                         {
                             Configuration["Authentication:AppIdUri"],
                             Configuration["Authentication:ClientId"]
-                        }
+                        },
+                        // In multi-tenant apps you should disable issuer validation:
+                        // ValidateIssuer = false,
+                        // In case you want to allow only specific tenants,
+                        // you can set the ValidIssuers property to a list of valid issuer ids
+                        // or specify a delegate for the IssuerValidator property, e.g.
+                        // IssuerValidator = (issuer, token, parameters) => {}
+                        // the validator should return the issuer string
+                        // if it is valid and throw an exception if not
                     };
                 });
             services.AddSingleton<IClaimsTransformation, AzureAdScopeClaimTransformation>();
