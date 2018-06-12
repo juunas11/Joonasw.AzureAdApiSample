@@ -37,9 +37,10 @@ namespace Joonasw.AzureAdApiSample.Api
                 o.AddPolicy(Policies.Default, policy =>
                 {
                     policy.RequireAuthenticatedUser();
+                    //To require the basic user_impersonation scope across the API, you can use:
                     //policy.RequirePermissions(
                     //    delegated: new[] { "user_impersonation" },
-                    //    application: new[] { "Todo.Read.All" });
+                    //    application: new string[0]);
                 });
                 o.AddPolicy(Policies.ReadTodoItems, policy =>
                 {
