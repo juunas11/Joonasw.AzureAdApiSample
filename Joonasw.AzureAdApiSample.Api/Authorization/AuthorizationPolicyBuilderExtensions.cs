@@ -7,13 +7,13 @@ namespace Joonasw.AzureAdApiSample.Api.Authorization
         public static void RequirePermissions(
             this AuthorizationPolicyBuilder builder,
             string[] delegated,
-            string[] application,
+            string[] application = null,
             string[] userRoles = null)
         {
             builder.Requirements.Add(new PermissionRequirement
             {
                 DelegatedPermissions = delegated,
-                ApplicationPermissions = application,
+                ApplicationPermissions = application ?? new string[0],
                 UserRoles = userRoles ?? new string[0]
             });
         }
