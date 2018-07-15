@@ -6,15 +6,15 @@ namespace Joonasw.AzureAdApiSample.Api.Extensions
     public static class ClaimsPrincipalExtensions
     {
         /// <summary>
-        /// Returns true if the call is delegated,
-        /// i.e. an app is making the call on behalf
-        /// of a user.
+        /// Returns true if the call is app-only,
+        /// i.e. an app is making the call as itself.
         /// </summary>
-        public static bool IsDelegatedCall(this ClaimsPrincipal user)
+        public static bool IsAppOnlyCall(this ClaimsPrincipal user)
         {
             // If caller has a user principal name in the token,
-            // it's a delegated call
-            return user.HasClaim(c => c.Type == ClaimTypes.Upn);
+            // it's a delegated call, so an app-only call is one
+            // without the claim
+            return !user.HasClaim(c => c.Type == ClaimTypes.Upn);
         }
 
         /// <summary>

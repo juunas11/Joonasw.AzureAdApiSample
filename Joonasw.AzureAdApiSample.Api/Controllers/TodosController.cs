@@ -30,13 +30,13 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
         [Authorize(Policies.ReadTodoItems)]
         public IActionResult Get()
         {
-            if (User.IsDelegatedCall())
+            if (User.IsAppOnlyCall())
             {
-                string userId = User.GetId();
-                return Ok(TodoItems.Where(i => i.UserId == userId));
+                return Ok(TodoItems);
             }
 
-            return Ok(TodoItems);
+            string userId = User.GetId();
+            return Ok(TodoItems.Where(i => i.UserId == userId));
         }
 
         // GET api/todos/guid-value
@@ -53,7 +53,7 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
 
             // Apps with app permissions can read all items
             // Delegated permissions only allow access to a user's data
-            if (User.IsDelegatedCall() && item.UserId != User.GetId())
+            if (!User.IsAppOnlyCall() && item.UserId != User.GetId())
             {
                 return Forbid();
             }
@@ -66,14 +66,14 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
         [Authorize(Policies.WriteTodoItems)]
         public IActionResult Post([FromBody]TodoItem model)
         {
-            if (!User.IsDelegatedCall() && string.IsNullOrWhiteSpace(model.UserId))
+            if (User.IsAppOnlyCall() && string.IsNullOrWhiteSpace(model.UserId))
             {
                 ModelState.AddModelError(nameof(model.UserId), "User id is required");
                 return BadRequest(ModelState);
             }
 
             model.Id = Guid.NewGuid();
-            if (User.IsDelegatedCall())
+            if (!User.IsAppOnlyCall())
             {
                 // If this is done with delegated permissions,
                 // we will put the calling user's id on all items
@@ -91,7 +91,7 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
         [Authorize(Policies.WriteTodoItems)]
         public IActionResult Put(Guid id, [FromBody]TodoItem model)
         {
-            if (!User.IsDelegatedCall() && string.IsNullOrWhiteSpace(model.UserId))
+            if (User.IsAppOnlyCall() && string.IsNullOrWhiteSpace(model.UserId))
             {
                 ModelState.AddModelError(nameof(model.UserId), "User id is required");
                 return BadRequest(ModelState);
@@ -105,12 +105,12 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
                 return NotFound();
             }
 
-            if (User.IsDelegatedCall() && item.UserId != User.GetId())
+            if (!User.IsAppOnlyCall() && item.UserId != User.GetId())
             {
                 return Forbid();
             }
 
-            if (User.IsDelegatedCall())
+            if (!User.IsAppOnlyCall())
             {
                 model.UserId = User.GetId();
             }
@@ -134,7 +134,7 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
                 return NoContent();
             }
 
-            if (User.IsDelegatedCall() && item.UserId != User.GetId())
+            if (!User.IsAppOnlyCall() && item.UserId != User.GetId())
             {
                 // Tried to delete todo item belonging to another user
                 return Forbid();
