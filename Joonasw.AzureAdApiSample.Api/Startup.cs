@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Joonasw.AzureAdApiSample.Api.Authorization;
+using Joonasw.AzureAdApiSample.Api.Extensions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;

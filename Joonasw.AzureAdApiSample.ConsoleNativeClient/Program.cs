@@ -8,8 +8,8 @@ namespace Joonasw.AzureAdApiSample.ConsoleNativeClient
     {
         static async Task Main(string[] args)
         {
-            var config = CreateConfig();
-            var settings = config.Get<ClientSettings>();
+            IConfiguration config = CreateConfig();
+            ClientSettings settings = config.Get<ClientSettings>();
             var todoApiClient = new TodoApiClient(settings);
             await todoApiClient.ListTodosAsync();
             Guid id = await todoApiClient.CreateTodoAsync(new TodoItem

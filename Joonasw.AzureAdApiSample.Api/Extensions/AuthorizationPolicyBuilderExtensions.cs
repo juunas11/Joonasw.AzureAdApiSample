@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Joonasw.AzureAdApiSample.Api.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
-namespace Joonasw.AzureAdApiSample.Api.Authorization
+namespace Joonasw.AzureAdApiSample.Api.Extensions
 {
     public static class AuthorizationPolicyBuilderExtensions
     {
