@@ -11,10 +11,10 @@ namespace Joonasw.AzureAdApiSample.Api.Extensions
         /// </summary>
         public static bool IsAppOnlyCall(this ClaimsPrincipal user)
         {
-            // If caller has a user principal name in the token,
+            // If caller has a scope claim in the token,
             // it's a delegated call, so an app-only call is one
             // without the claim
-            return !user.HasClaim(c => c.Type == ClaimTypes.Upn);
+            return !user.HasClaim(c => c.Type == Constants.ScopeClaimType);
         }
 
         /// <summary>
