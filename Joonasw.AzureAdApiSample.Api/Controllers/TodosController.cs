@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 using Joonasw.AzureAdApiSample.Api.Authorization;
 using Joonasw.AzureAdApiSample.Api.Data;
 using Joonasw.AzureAdApiSample.Api.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Joonasw.AzureAdApiSample.Api.Controllers
 {
@@ -13,58 +13,33 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
     [Route("api/[controller]")]
     public class TodosController : ControllerBase
     {
-        // In-memory data-store for testing.
-        private static readonly List<TodoItem> TodoItems = new List<TodoItem>
+        private readonly TodoContext _db;
+
+        public TodosController(TodoContext db)
         {
-            new TodoItem //This will only be returned in app-only calls, no one will have that userid
-            {
-                Id = Guid.NewGuid(),
-                Text = "Implement authentication",
-                IsDone = true,
-                UserId = Guid.NewGuid().ToString()
-            }
-        };
+            _db = db;
+        }
 
         // GET api/todos
         [HttpGet]
         [Authorize(Policies.ReadTodoItems)]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
-            if (User.IsAppOnlyCall())
-            {
-                return Ok(TodoItems);
-            }
-
-            string userId = User.GetId();
-            return Ok(TodoItems.Where(i => i.UserId == userId));
+            return Ok(await _db.TodoItems.AsNoTracking().ToListAsync());
         }
 
         // GET api/todos/guid-value
         [HttpGet("{id}")]
         [Authorize(Policies.ReadTodoItems)]
-        public IActionResult Get(Guid id)
+        public async Task<ActionResult<TodoItem>> Get(Guid id)
         {
-            TodoItem item = TodoItems.FirstOrDefault(i => i.Id == id);
-
-            if(item == null)
-            {
-                return NotFound();
-            }
-
-            // Apps with app permissions can read all items
-            // Delegated permissions only allow access to a user's data
-            if (!User.IsAppOnlyCall() && item.UserId != User.GetId())
-            {
-                return Forbid();
-            }
-
-            return Ok(item);
+            return await _db.TodoItems.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
         }
 
         // POST api/todos
         [HttpPost]
         [Authorize(Policies.WriteTodoItems)]
-        public IActionResult Post([FromBody]TodoItem model)
+        public async Task<IActionResult> Post([FromBody]TodoItem model)
         {
             if (User.IsAppOnlyCall() && string.IsNullOrWhiteSpace(model.UserId))
             {
@@ -82,14 +57,16 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
                 model.UserId = User.GetId();
             }
 
-            TodoItems.Add(model);
+            await _db.TodoItems.AddAsync(model);
+            await _db.SaveChangesAsync();
+
             return CreatedAtAction(nameof(Get), new{id = model.Id}, model);
         }
 
         // PUT api/todos/guid-value
         [HttpPut("{id}")]
         [Authorize(Policies.WriteTodoItems)]
-        public IActionResult Put(Guid id, [FromBody]TodoItem model)
+        public async Task<IActionResult> Put(Guid id, [FromBody]TodoItem model)
         {
             if (User.IsAppOnlyCall() && string.IsNullOrWhiteSpace(model.UserId))
             {
@@ -99,24 +76,23 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
 
             model.Id = id;
 
-            TodoItem item = TodoItems.FirstOrDefault(i => i.Id == id);
+            TodoItem item = await _db.TodoItems.FirstOrDefaultAsync(i => i.Id == id);
             if (item == null)
             {
                 return NotFound();
             }
 
-            if (!User.IsAppOnlyCall() && item.UserId != User.GetId())
-            {
-                return Forbid();
-            }
-
+            // A delegated caller cannot specify another user id other than the logged in user
             if (!User.IsAppOnlyCall())
             {
                 model.UserId = User.GetId();
             }
 
-            TodoItems.Remove(item);
-            TodoItems.Add(model);
+            item.IsDone = model.IsDone;
+            item.Text = model.Text;
+            item.UserId = model.UserId;
+
+            await _db.SaveChangesAsync();
 
             return NoContent();
         }
@@ -124,9 +100,9 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
         // DELETE api/todos/guid-value
         [HttpDelete("{id}")]
         [Authorize(Policies.WriteTodoItems)]
-        public IActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            TodoItem item = TodoItems.FirstOrDefault(i => i.Id == id);
+            TodoItem item = await _db.TodoItems.FirstOrDefaultAsync(i => i.Id == id);
             if (item == null)
             {
                 // They wanted it deleted, well it does not exist
@@ -134,13 +110,8 @@ namespace Joonasw.AzureAdApiSample.Api.Controllers
                 return NoContent();
             }
 
-            if (!User.IsAppOnlyCall() && item.UserId != User.GetId())
-            {
-                // Tried to delete todo item belonging to another user
-                return Forbid();
-            }
-
-            TodoItems.Remove(item);
+            _db.TodoItems.Remove(item);
+            await _db.SaveChangesAsync();
 
             return NoContent();
         }

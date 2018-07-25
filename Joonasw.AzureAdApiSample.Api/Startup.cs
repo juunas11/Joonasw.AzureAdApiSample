@@ -1,13 +1,16 @@
 ﻿using System.Collections.Generic;
 using Joonasw.AzureAdApiSample.Api.Authorization;
+using Joonasw.AzureAdApiSample.Api.Data;
 using Joonasw.AzureAdApiSample.Api.Extensions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -86,6 +89,14 @@ namespace Joonasw.AzureAdApiSample.Api
                 });
             services.AddSingleton<IClaimsTransformation, AzureAdScopeClaimTransformation>();
             services.AddSingleton<IAuthorizationHandler, PermissionRequirementHandler>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+            services.AddSingleton<ITodoContextFactory, TodoContextFactory>();
+            services.AddScoped<TodoContext>(provider =>
+            {
+                var factory = provider.GetRequiredService<ITodoContextFactory>();
+                return factory.CreateContext();
+            });
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
