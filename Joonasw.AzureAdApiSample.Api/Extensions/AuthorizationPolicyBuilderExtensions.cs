@@ -11,6 +11,7 @@ namespace Joonasw.AzureAdApiSample.Api.Extensions
             string[] application = null,
             string[] userRoles = null)
         {
+            builder.RequireAuthenticatedUser();
             builder.Requirements.Add(new PermissionRequirement
             {
                 DelegatedPermissions = delegated,
